@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "sqlite"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(cuid())
+  username String @unique
+  email String @unique
+  firstName String
+  lastName String
+  passwordHash String @default("")
+  avatar String @default("")
+  rating Float @default(4.9)
+  verified Boolean @default(false)
+  role String @default("USER")
+  status String @default("Active")
+  location String @default("Zürich")
+  createdAt DateTime @default(now())
+  listings Listing[]
+  addresses Address[]
+  favorites Favorite[]
+  cart CartItem[]
+  orders Order[]
+  messages Message[]
+  offers Offer[]
+  bids AuctionBid[]
+  searches SavedSearch[]
+  notifications Notification[]
+  reviews Review[]
+  reports Report[]
+}
+model Address {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  name String
+  street String
+  city String
+  postalCode String
+  country String @default("Switzerland")
+  phone String @default("")
+}
+model Category {
+  id String @id
+  slug String @unique
+  name String
+  subcategories String
+  listings Listing[]
+}
+model Listing {
+  id String @id @default(cuid())
+  slug String @unique
+  title String
+  description String
+  price Int
+  originalPrice Int?
+  currency String @default("CHF")
+  condition String @default("Very good")
+  status String @default("Active")
+  listingType String @default("Fixed price")
+  allowOffers Boolean @default(true)
+  startingBid Int @default(0)
+  currentBid Int @default(0)
+  minimumBid Int @default(500)
+  auctionEndsAt DateTime?
+  quantity Int @default(1)
+  brand String
+  model String @default("")
+  specifications String @default("{}")
+  subcategory String @default("")
+  location String
+  delivery Boolean @default(true)
+  pickup Boolean @default(true)
+  views Int @default(0)
+  promoted Boolean @default(false)
+  sellerId String
+  seller User @relation(fields:[sellerId], references:[id])
+  categoryId String
+  category Category @relation(fields:[categoryId], references:[id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  images ListingImage[]
+  favorites Favorite[]
+  cart CartItem[]
+  orderItems OrderItem[]
+  reviews Review[]
+  offers Offer[]
+  bids AuctionBid[]
+  conversations Conversation[]
+  @@index([categoryId,status])
+}
+model ListingImage {
+  id String @id @default(cuid())
+  url String
+  position Int @default(0)
+  listingId String
+  listing Listing @relation(fields:[listingId], references:[id], onDelete:Cascade)
+}
+model Favorite {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  listingId String
+  listing Listing @relation(fields:[listingId], references:[id], onDelete:Cascade)
+  @@unique([userId,listingId])
+}
+model CartItem {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  listingId String
+  listing Listing @relation(fields:[listingId], references:[id], onDelete:Cascade)
+  quantity Int @default(1)
+  @@unique([userId,listingId])
+}
+model Order {
+  id String @id @default(cuid())
+  buyerId String
+  buyer User @relation(fields:[buyerId], references:[id])
+  total Int
+  shipping Int @default(790)
+  discount Int @default(0)
+  status String @default("Paid")
+  address String
+  paymentMethod String
+  createdAt DateTime @default(now())
+  items OrderItem[]
+  disputes Dispute[]
+}
+model OrderItem {
+  id String @id @default(cuid())
+  orderId String
+  order Order @relation(fields:[orderId], references:[id], onDelete:Cascade)
+  listingId String
+  listing Listing @relation(fields:[listingId], references:[id])
+  quantity Int
+  price Int
+}
+model Review {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  listingId String
+  listing Listing @relation(fields:[listingId], references:[id])
+  rating Int
+  text String
+  createdAt DateTime @default(now())
+}
+model Conversation {
+  id String @id @default(cuid())
+  buyerId String
+  sellerId String
+  listingId String
+  listing Listing @relation(fields:[listingId], references:[id])
+  blocked Boolean @default(false)
+  messages Message[]
+  @@unique([buyerId,sellerId,listingId])
+}
+model Message {
+  id String @id @default(cuid())
+  conversationId String
+  conversation Conversation @relation(fields:[conversationId], references:[id], onDelete:Cascade)
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  text String
+  read Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+model Offer {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  listingId String
+  listing Listing @relation(fields:[listingId], references:[id])
+  amount Int
+  status String @default("Pending")
+  createdAt DateTime @default(now())
+}
+model AuctionBid {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  listingId String
+  listing Listing @relation(fields:[listingId], references:[id])
+  amount Int
+  createdAt DateTime @default(now())
+}
+model SavedSearch {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  name String
+  query String
+  notify Boolean @default(true)
+}
+model Notification {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  type String
+  title String
+  text String
+  read Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+model Report {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  target String
+  reason String
+  status String @default("Open")
+  createdAt DateTime @default(now())
+}
+model Dispute {
+  id String @id @default(cuid())
+  orderId String
+  order Order @relation(fields:[orderId], references:[id])
+  reason String
+  status String @default("Open")
+  createdAt DateTime @default(now())
+}

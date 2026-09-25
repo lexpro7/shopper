@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env
+*.db
+*.db-journal
+*.tsbuildinfo
+test-results/
+playwright-report/
+artifacts/
